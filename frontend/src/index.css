@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --bg-deep: #05060a;
+  --bg-card: rgba(16, 18, 27, 0.7);
+  --accent-cyan: #00f2ff;
+  --accent-purple: #bc13fe;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --border-glow: rgba(0, 242, 255, 0.1);
+  --shadow-glow: 0 0 20px rgba(0, 242, 255, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(188, 19, 254, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0, 242, 255, 0.05) 0%, transparent 40%);
+  min-height: 100vh;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-[#10121b]/70 backdrop-blur-xl border border-white/5 rounded-2xl p-6 transition-all duration-300;
+  }
+
+  .glass-card:hover {
+    @apply border-[#00f2ff]/30 shadow-[0_0_20px_rgba(0,242,255,0.1)];
+  }
+
+  .neon-text {
+    @apply text-[#00f2ff] drop-shadow-[0_0_10px_rgba(0,242,255,0.5)];
+  }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+  }
+
+  .status-in-transit { @apply bg-[#00f2ff]/10 text-[#00f2ff] border-[#00f2ff]/30; }
+  .status-rerouted { @apply bg-[#bc13fe]/10 text-[#bc13fe] border-[#bc13fe]/30; }
+  .status-low-stock { @apply bg-red-500/10 text-red-500 border-red-500/30; }
+
+  .btn-primary {
+    @apply bg-gradient-to-br from-[#00f2ff] to-[#bc13fe] text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_4px_15px_rgba(188,19,254,0.4)];
+  }
+
+  .input-glow {
+    @apply bg-white/5 border border-white/10 rounded-xl text-white px-4 py-3 w-full transition-all duration-300 focus:border-[#00f2ff]/50 focus:bg-[#00f2ff]/5 focus:shadow-[0_0_15px_rgba(0,242,255,0.1)] outline-none;
+  }
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-white/20;
+}

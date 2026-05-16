@@ -1,0 +1,24 @@
+# Tasks: Autonomous Supply Chain Agent
+
+- [x] **Phase 1: Project Initialization**
+    - [x] Create directory structure (`backend/`, `frontend/`, `mobile/`)
+    - [x] Initialize Backend (Express)
+    - [x] Initialize Frontend (Vite/React)
+- [x] **Phase 2: Backend Development (The Brain)**
+    - [x] Setup Mock Database (Shipments, Inventory, Logs)
+    - [x] Implement Agent Logic Service (Ingest -> Insight -> Impact -> Action)
+    - [x] Create API endpoints for Frontend/Mobile
+    - [x] Implement Simulation Tools (Mock API calls)
+- [x] **Phase 3: Frontend Development (Command Center)**
+    - [x] Setup Design System (Vanilla CSS, Dark Mode, Glow)
+    - [x] Build Main Dashboard (Real-time Feed, Map, Stats)
+    - [x] Implement Agent Trace UI (Step-by-step reasoning)
+    - [x] Build Before/After State Comparison
+- [x] **Phase 4: Mobile Development (Companion App)**
+    - [x] Setup React Native (Expo) structure
+    - [x] Build Mobile Dashboard
+    - [x] Implement Action Approval Workflow
+- [x] **Phase 5: Final Integration & Documentation**
+    - [x] Connect Mobile and Frontend to Backend
+    - [x] Generate Sample Scenarios (Hamburg Port Strike, etc.)
+    - [x] Finalize README and Documentation
