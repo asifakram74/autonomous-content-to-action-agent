@@ -1,0 +1,8 @@
+# Tasks
+
+- [x] Install `@google/generative-ai` dependency in backend
+- [x] Set up `.env.example` in backend
+- [x] Initialize `dotenv` in `server.js`
+- [x] Rewrite `agent.service.js` to use Gemini API for unstructured analysis
+- [x] Update `executeAction` in `agent.service.js` to process dynamic actions
+- [x] Verify system compile and fallback logic

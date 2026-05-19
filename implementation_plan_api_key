@@ -1,0 +1,42 @@
+# Implementation Plan - Dynamic AI Agent Reasoning via Google Gemini
+
+We will upgrade the hardcoded rule-based backend with Google's Gemini LLM to create a genuinely intelligent, dynamic logistics agent. This will enable the system to handle any unstructured news or disruption reports, analyze impact on active shipments, and generate realistic counter-measures.
+
+## User Review Required
+
+> [!IMPORTANT]
+> To run the updated system, you will need to obtain a **Gemini API Key** from Google AI Studio and place it in a `.env` file under the `backend/` directory as `GEMINI_API_KEY=your_api_key_here`.
+
+## Proposed Changes
+
+### [Backend Component]
+
+#### [MODIFY] [package.json](file:///e:/Work/Google%20Antigravity%20Hackathon%20Challenge%202026/Autonomous%20Content-to-Action%20Agent%20%28Insight%20%E2%86%92%20Action/autonomous-content-to-action-agent/backend/package.json)
+- Add `@google/generative-ai` to the project's dependencies to access Gemini models.
+
+#### [NEW] [dotenv configuration](file:///e:/Work/Google%20Antigravity%20Hackathon%20Challenge%202026/Autonomous%20Content-to-Action%20Agent%20%28Insight%20%E2%86%92%20Action/autonomous-content-to-action-agent/backend/.env.example)
+- Create a `.env.example` file displaying the required environment variables:
+  ```env
+  PORT=5000
+  GEMINI_API_KEY=your_gemini_api_key_here
+  ```
+
+#### [MODIFY] [server.js](file:///e:/Work/Google%20Antigravity%20Hackathon%20Challenge%202026/Autonomous%20Content-to-Action%20Agent%20%28Insight%20%E2%86%92%20Action/autonomous-content-to-action-agent/backend/server.js)
+- Add `require('dotenv').config()` at the top to load environmental configurations from `.env`.
+
+#### [MODIFY] [agent.service.js](file:///e:/Work/Google%20Antigravity%20Hackathon%20Challenge%202026/Autonomous%20Content-to-Action%20Agent%20%28Insight%20%E2%86%92%20Action/autonomous-content-to-action-agent/backend/services/agent.service.js)
+- Integrate the `@google/generative-ai` SDK.
+- Configure Gemini `gemini-2.5-flash` with a system prompt and a JSON schema to guarantee structured outputs that conform to our frontend Reasoning Trace UI.
+- Read current shipment data from the database (`mock_db.json`) and feed it to the model prompt so that the LLM can dynamically determine which shipment ID is impacted.
+- Generalize the action executor `executeAction()` to dynamically extract parameters (such as the target shipment ID and description) from the LLM-generated plan, rather than using hardcoded values.
+
+---
+
+## Verification Plan
+
+### Manual Verification
+1. Place a valid `GEMINI_API_KEY` in `backend/.env`.
+2. Start the backend (`npm run dev` or `node server.js`).
+3. Enter geopolitical news (e.g., *"Iran army warns will 'open new fronts' against US if attacks resume"* or *"Typhoon in Pacific Ocean delays west-coast shipping routes"*).
+4. Verify that the agent reasoning trace correctly identifies the disruption, flags the relevant shipment (e.g. `SH-002` for Pacific disruption), and proposes actionable steps.
+5. Click "Execute Action" and verify that the system updates its database, logs, and notification feeds.

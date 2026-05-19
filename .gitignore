@@ -4,7 +4,7 @@
 .htaccess
 
 # dependencies
-/node_modules
+node_modules/
 /profile-card.md
 /new-feature.md
 /postman_collection.json

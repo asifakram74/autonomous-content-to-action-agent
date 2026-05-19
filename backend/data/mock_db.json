@@ -4,9 +4,9 @@
       "id": "SH-001",
       "origin": "Hamburg, Germany",
       "destination": "New York, USA",
-      "status": "Rerouted",
-      "current_location": "Diverting to Rotterdam",
-      "eta": "2026-05-22",
+      "status": "In Transit",
+      "current_location": "North Atlantic",
+      "eta": "2026-05-20",
       "items": [
         "Automotive Parts",
         "Precision Tools"
@@ -52,13 +52,6 @@
       "status": "Healthy"
     }
   ],
-  "logs": [
-    {
-      "timestamp": "2026-05-14T23:45:04.229Z",
-      "action": "REROUTE",
-      "result": "Success",
-      "details": "Reroute SH-001 to Port of Rotterdam and use express rail to Hamburg."
-    }
-  ],
+  "logs": [],
   "notifications": []
 }
