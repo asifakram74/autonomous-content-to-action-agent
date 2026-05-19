@@ -53,5 +53,9 @@
     }
   ],
   "logs": [],
-  "notifications": []
+  "notifications": [],
+  "constraints": {
+    "max_emergency_budget_usd": 5000,
+    "supplier_lead_time_days": 10
+  }
 }

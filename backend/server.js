@@ -86,11 +86,13 @@ app.post('/api/reset', (req, res) => {
 
 // Process new content (The Agent Entry Point)
 app.post('/api/agent/process', async (req, res) => {
-    const { content } = req.body;
-    if (!content) return res.status(400).json({ error: 'No content provided' });
+    const { content, sources } = req.body;
+    if (!content && (!sources || sources.length === 0)) {
+        return res.status(400).json({ error: 'No content or sources provided' });
+    }
 
     try {
-        const trace = await agentService.processContent(content);
+        const trace = await agentService.processContent(req.body);
         res.json(trace);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -99,9 +101,9 @@ app.post('/api/agent/process', async (req, res) => {
 
 // Execute a specific action
 app.post('/api/agent/execute', async (req, res) => {
-    const { actionId, trace } = req.body;
+    const { actionId, trace, simulateFailure } = req.body;
     try {
-        const result = await agentService.executeAction(actionId, trace);
+        const result = await agentService.executeAction(actionId, trace, simulateFailure);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
