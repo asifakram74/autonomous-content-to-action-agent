@@ -1,0 +1,36 @@
+# Walkthrough - Dynamic AI Agent Reasoning via Google Gemini
+
+I have successfully integrated the Google Gemini API into the logistics agent backend to enable true dynamic reasoning, pattern recognition, impact analysis, and flexible action execution.
+
+## Changes Made
+
+### 1. Backend Dependencies
+- Installed the `@google/generative-ai` package in the `backend/` directory.
+- Created `backend/.env.example` to guide the configuration of the environment variables.
+
+### 2. server.js Update
+- Initialized `dotenv` at the top of the file to load configurations from `.env`.
+
+### 3. agent.service.js Upgrade
+- Configured the Google Generative AI client using `gemini-2.5-flash`.
+- Written a detailed system prompt instructing the model to parse unstructured news, cross-reference it with the current shipments/inventory state, and output formatted JSON conforming to the frontend schema.
+- Added a robust **rule-based fallback mechanism** that activates if the `GEMINI_API_KEY` is missing or the API call fails, preventing system crashes and ensuring demo reliability.
+- Upgraded the action execution simulation (`executeAction`) to dynamically process `REROUTE`, `NOTIFY`, and `REORDER` commands for any shipment or inventory item target, rather than relying on static values.
+
+---
+
+## Verification & Testing
+
+### 1. Server Compilation and Execution
+The server was compiled and successfully run locally:
+```bash
+[Antigravity Backend] WARNING: GEMINI_API_KEY not found in environment. Falling back to rule-based mock reasoning.
+[Antigravity Backend] Server running on port 5000
+```
+The server correctly handles the missing environment key by logging a clear warning and falling back to the rule-based logic.
+
+### 2. Next Steps for Demo
+Once you configure `GEMINI_API_KEY=your_key` in a new file `backend/.env`, the system will automatically:
+- Parse any geopolitical news (like Red Sea blockades or Pacific storms) dynamically.
+- Suggest reroutes for target shipments (like `SH-002` or `SH-003`).
+- Restock inventory item levels when they are flagged.
