@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Antigravity Operator Node",
+    "slug": "antigravity-operator-node",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.antigravity.operatornode",
+      "versionCode": 1
+    }
+  }
+}
