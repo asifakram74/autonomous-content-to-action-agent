@@ -50,9 +50,22 @@
       "stock": 500,
       "reorder_point": 300,
       "status": "Healthy"
+    },
+    {
+      "item": "CPU Processor",
+      "stock": 5000,
+      "reorder_point": 200,
+      "status": "Healthy"
     }
   ],
-  "logs": [],
+  "logs": [
+    {
+      "timestamp": "2026-05-20T16:10:29.934Z",
+      "action": "INVENTORY_ADDED",
+      "result": "Success",
+      "details": "New inventory item \"CPU Processor\" added with stock 5000."
+    }
+  ],
   "notifications": [],
   "activeTrace": null
 }

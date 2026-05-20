@@ -236,6 +236,7 @@ export default function App() {
   const [error, setError]       = useState(null);
   const [activeTab, setActiveTab] = useState('FLEET');
   const [showProfile, setShowProfile] = useState(false);
+  const [showDataManager, setShowDataManager] = useState(false);
 
   const handleAuth = (t, u, url) => {
     setToken(t);
@@ -321,6 +322,9 @@ export default function App() {
               {error ? 'OFFLINE' : 'LIVE'}
             </Text>
           </View>
+          <TouchableOpacity style={[s.avatarBtn, { marginRight: 4 }]} onPress={() => setShowDataManager(true)}>
+            <Text style={{ fontSize: 14 }}>➕</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={s.avatarBtn} onPress={() => setShowProfile(true)}>
             <Text style={s.avatarText}>{user?.username?.[0]?.toUpperCase() || '?'}</Text>
           </TouchableOpacity>
@@ -391,6 +395,15 @@ export default function App() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* ── Data Manager Modal ── */}
+      <DataManagerModal 
+        visible={showDataManager} 
+        onClose={() => setShowDataManager(false)} 
+        state={state} 
+        baseUrl={baseUrl} 
+        onRefresh={fetchData} 
+      />
     </SafeAreaView>
   );
 }
@@ -875,6 +888,269 @@ function SectionHeader({ title, icon }) {
   );
 }
 
+// ─── Data Manager Modal ──────────────────────────────────────────────────────
+function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
+  const [tab, setTab] = useState('SHIPMENTS');
+  const [loading, setLoading] = useState(false);
+  
+  // Forms
+  const [sId, setSId] = useState('');
+  const [sOrigin, setSOrigin] = useState('');
+  const [sDest, setSDest] = useState('');
+  const [sItems, setSItems] = useState([]);
+  const [sPriority, setSPriority] = useState('Medium');
+
+  const toggleItem = (itemName) => {
+    setSItems(prev => prev.includes(itemName)
+      ? prev.filter(i => i !== itemName)
+      : [...prev, itemName]
+    );
+  };
+
+  const [iName, setIName] = useState('');
+  const [iStock, setIStock] = useState('');
+  const [iReorder, setIReorder] = useState('');
+  const [showInvDropdown, setShowInvDropdown] = useState(false);
+
+  const addShipment = async () => {
+    if (!sId || !sOrigin || !sDest || sItems.length === 0) return;
+    setLoading(true);
+    try {
+      await axios.post(`${baseUrl}/api/shipments`, {
+        id: sId,
+        origin: sOrigin,
+        destination: sDest,
+        items: sItems,
+        priority: sPriority
+      });
+      setSId(''); setSOrigin(''); setSDest(''); setSItems([]);
+      onRefresh();
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const deleteShipment = async (id) => {
+    try {
+      await axios.delete(`${baseUrl}/api/shipments/${id}`);
+      onRefresh();
+    } catch (e) { console.error(e); }
+  };
+
+  const addInventory = async () => {
+    if (!iName || !iStock) return;
+    setLoading(true);
+    try {
+      await axios.post(`${baseUrl}/api/inventory`, {
+        item: iName,
+        stock: Number(iStock),
+        reorder_point: Number(iReorder) || undefined
+      });
+      setIName(''); setIStock(''); setIReorder('');
+      onRefresh();
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const deleteInventory = async (item) => {
+    try {
+      await axios.delete(`${baseUrl}/api/inventory/${encodeURIComponent(item)}`);
+      onRefresh();
+    } catch (e) { console.error(e); }
+  };
+
+  const inputStyle = {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#fff',
+    fontSize: 13,
+    marginBottom: 10
+  };
+
+  const labelStyle = {
+    color: C.textDim,
+    fontSize: 10,
+    fontWeight: '700',
+    marginBottom: 4,
+    textTransform: 'uppercase'
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+        <View style={[s.header, { borderBottomWidth: 1 }]}>
+          <Text style={s.headerTitle}>DATA MANAGER</Text>
+          <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
+            <Text style={{ color: C.cyan, fontWeight: '900' }}>CLOSE</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ flexDirection: 'row', backgroundColor: C.surfaceL, padding: 4 }}>
+          {['SHIPMENTS', 'INVENTORY'].map(t => (
+            <TouchableOpacity 
+              key={t} 
+              onPress={() => setTab(t)}
+              style={{ flex: 1, paddingVertical: 12, alignItems: 'center', backgroundColor: tab === t ? 'rgba(0,242,255,0.1)' : 'transparent', borderRadius: 10 }}
+            >
+              <Text style={{ color: tab === t ? C.cyan : C.textMute, fontWeight: '800', fontSize: 11 }}>{t}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <ScrollView contentContainerStyle={{ padding: 20 }}>
+          {tab === 'SHIPMENTS' ? (
+            <>
+              <View style={[s.card, { backgroundColor: C.surface, marginBottom: 20 }]}>
+                <Text style={[s.sectionTitle, { marginBottom: 12, color: C.cyan }]}>+ ADD NEW SHIPMENT</Text>
+                
+                <Text style={labelStyle}>Shipment ID</Text>
+                <TextInput style={inputStyle} value={sId} onChangeText={setSId} placeholder="SH-100" placeholderTextColor={C.textMute} />
+                
+                <Text style={labelStyle}>Priority</Text>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                  {['Low', 'Medium', 'High', 'Critical'].map(p => (
+                    <TouchableOpacity 
+                      key={p} 
+                      onPress={() => setSPriority(p)}
+                      style={{ paddingHorizontal: 8, paddingVertical: 6, borderRadius: 8, backgroundColor: sPriority === p ? C.cyan + '20' : 'transparent', borderWidth: 1, borderColor: sPriority === p ? C.cyan : C.border }}
+                    >
+                      <Text style={{ fontSize: 9, color: sPriority === p ? C.cyan : C.textMute, fontWeight: '900' }}>{p.toUpperCase()}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={labelStyle}>Origin</Text>
+                <TextInput style={inputStyle} value={sOrigin} onChangeText={setSOrigin} placeholder="City, Country" placeholderTextColor={C.textMute} />
+                
+                <Text style={labelStyle}>Destination</Text>
+                <TextInput style={inputStyle} value={sDest} onChangeText={setSDest} placeholder="City, Country" placeholderTextColor={C.textMute} />
+                
+                <Text style={labelStyle}>Select Items from Inventory</Text>
+                <View style={{ marginBottom: 15 }}>
+                  <TouchableOpacity 
+                    onPress={() => setShowInvDropdown(!showInvDropdown)}
+                    style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }]}
+                  >
+                    <Text style={{ color: sItems.length > 0 ? '#fff' : C.textMute, fontSize: 13 }}>
+                      {sItems.length === 0 ? 'Choose items...' : `${sItems.length} item(s) selected`}
+                    </Text>
+                    <Text style={{ color: C.textMute, transform: [{ rotate: showInvDropdown ? '90deg' : '0deg' }] }}>▶</Text>
+                  </TouchableOpacity>
+
+                  {showInvDropdown && (
+                    <View style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 5, maxHeight: 150 }}>
+                      <ScrollView nestedScrollEnabled={true}>
+                        {state?.inventory?.length === 0 ? (
+                          <Text style={{ color: C.textMute, fontSize: 11, padding: 10, textAlign: 'center' }}>No inventory items found</Text>
+                        ) : (
+                          state.inventory.map(i => (
+                            <TouchableOpacity 
+                              key={i.item} 
+                              onPress={() => toggleItem(i.item)}
+                              style={{ 
+                                flexDirection: 'row', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center', 
+                                padding: 12, 
+                                borderRadius: 8, 
+                                backgroundColor: sItems.includes(i.item) ? C.cyan + '10' : 'transparent' 
+                              }}
+                            >
+                              <Text style={{ color: sItems.includes(i.item) ? C.cyan : C.textDim, fontSize: 13, fontWeight: sItems.includes(i.item) ? '700' : '400' }}>
+                                {i.item}
+                              </Text>
+                              {sItems.includes(i.item) && <Text style={{ color: C.cyan }}>✔</Text>}
+                            </TouchableOpacity>
+                          ))
+                        )}
+                      </ScrollView>
+                    </View>
+                  )}
+                  
+                  {sItems.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                      {sItems.map(name => (
+                        <View key={name} style={{ backgroundColor: C.cyan + '15', borderRadius: 6, borderWith: 1, borderColor: C.cyan + '30', paddingHorizontal: 8, paddingVertical: 4 }}>
+                          <Text style={{ color: C.cyan, fontSize: 9, fontWeight: '900' }}>{name.toUpperCase()}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                <TouchableOpacity 
+                  style={[s.authSubmitBtn, { marginTop: 10, paddingVertical: 12 }]} 
+                  onPress={addShipment}
+                  disabled={loading}
+                >
+                  {loading ? <ActivityIndicator color="#000" /> : <Text style={s.authSubmitText}>ADD SHIPMENT</Text>}
+                </TouchableOpacity>
+              </View>
+
+              <Text style={s.sectionTitle}>ACTIVE SHIPMENTS ({state?.shipments?.length})</Text>
+              {state?.shipments?.map(ship => (
+                <View key={ship.id} style={[s.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                  <View>
+                    <Text style={{ color: C.cyan, fontWeight: '900', fontSize: 13 }}>{ship.id}</Text>
+                    <Text style={{ color: C.textDim, fontSize: 11 }}>{ship.origin} → {ship.destination}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => deleteShipment(ship.id)} style={{ padding: 10 }}>
+                    <Text style={{ fontSize: 18 }}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
+          ) : (
+            <>
+              <View style={[s.card, { backgroundColor: C.surface, marginBottom: 20 }]}>
+                <Text style={[s.sectionTitle, { marginBottom: 12, color: C.cyan }]}>+ ADD NEW INVENTORY</Text>
+                
+                <Text style={labelStyle}>Item Name</Text>
+                <TextInput style={inputStyle} value={iName} onChangeText={setIName} placeholder="Microchips" placeholderTextColor={C.textMute} />
+                
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={labelStyle}>Stock</Text>
+                    <TextInput style={inputStyle} value={iStock} onChangeText={setIStock} placeholder="500" keyboardType="numeric" placeholderTextColor={C.textMute} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={labelStyle}>Reorder Point</Text>
+                    <TextInput style={inputStyle} value={iReorder} onChangeText={setIReorder} placeholder="100" keyboardType="numeric" placeholderTextColor={C.textMute} />
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={[s.authSubmitBtn, { marginTop: 10, paddingVertical: 12 }]} 
+                  onPress={addInventory}
+                  disabled={loading}
+                >
+                  {loading ? <ActivityIndicator color="#000" /> : <Text style={s.authSubmitText}>ADD INVENTORY ITEM</Text>}
+                </TouchableOpacity>
+              </View>
+
+              <Text style={s.sectionTitle}>CURRENT INVENTORY ({state?.inventory?.length})</Text>
+              {state?.inventory?.map(inv => (
+                <View key={inv.item} style={[s.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                  <View>
+                    <Text style={{ color: '#fff', fontWeight: '900', fontSize: 13 }}>{inv.item}</Text>
+                    <Text style={{ color: C.textDim, fontSize: 11 }}>Stock: {inv.stock} | RP: {inv.reorder_point}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => deleteInventory(inv.item)} style={{ padding: 10 }}>
+                    <Text style={{ fontSize: 18 }}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   flex1: { flex: 1 },
@@ -902,6 +1178,7 @@ const s = StyleSheet.create({
   configBtnText:     { color: C.textMute, fontSize: 12, fontWeight: '600' },
   authSubmitBtn:     { backgroundColor: C.cyan, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 16, marginTop: 4, shadowColor: C.cyan, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8 },
   authSubmitText:    { color: '#000', fontWeight: '900', fontSize: 14, letterSpacing: 1 },
+  authSubmitBtnM:    { backgroundColor: C.cyan, borderRadius: 14, paddingVertical: 12, alignItems: 'center', marginBottom: 10, shadowColor: C.cyan, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8 },
   switchText:        { textAlign: 'center', color: C.textMute, fontSize: 12 },
   authFooter:        { textAlign: 'center', color: C.textMute, fontSize: 9, letterSpacing: 3, marginTop: 24 },
 
@@ -910,7 +1187,7 @@ const s = StyleSheet.create({
   loadingText:       { color: C.cyan, fontSize: 10, letterSpacing: 3, fontWeight: '700' },
 
   // Header
-  header:            { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
+  header:            { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: C.border },
   headerTitle:       { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 1 },
   headerSub:         { color: C.cyan, fontSize: 9, fontWeight: '700', letterSpacing: 2, marginTop: 2 },
   headerRight:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -982,8 +1259,8 @@ const s = StyleSheet.create({
   emptyText:         { color: C.textMute, fontSize: 13, fontStyle: 'italic' },
 
   // Bottom nav
-  navbar:            { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', backgroundColor: C.surfaceL, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: Platform.OS === 'ios' ? 20 : 6 },
-  navBtn:            { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 10, position: 'relative' },
+  navbar:            { flexDirection: 'row', backgroundColor: C.surfaceL, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: Platform.OS === 'ios' ? 35 : 25, height: Platform.OS === 'ios' ? 95 : 85 },
+  navBtn:            { flex: 1, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   navIcon:           { fontSize: 20, opacity: 0.4 },
   navLabel:          { fontSize: 9, color: C.textMute, marginTop: 3, fontWeight: '700', letterSpacing: 0.5 },
   navIndicator:      { position: 'absolute', top: 0, left: '30%', right: '30%', height: 2, backgroundColor: C.cyan, borderRadius: 1 },
