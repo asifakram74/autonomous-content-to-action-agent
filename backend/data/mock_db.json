@@ -51,12 +51,27 @@
         }
       ],
       "priority": "High"
+    },
+    {
+      "id": "SH-005",
+      "origin": "New York USA",
+      "destination": "Kuwait UAE",
+      "status": "In Transit",
+      "current_location": "New York USA",
+      "eta": "2026-05-29",
+      "items": [
+        {
+          "name": "Microchips",
+          "qty": 100
+        }
+      ],
+      "priority": "Critical"
     }
   ],
   "inventory": [
     {
       "item": "Microchips",
-      "stock": 150,
+      "stock": 50,
       "reorder_point": 200,
       "status": "Low Stock"
     },
@@ -85,6 +100,12 @@
       "action": "SHIPMENT_ADDED",
       "result": "Success",
       "details": "New shipment SH-004 from Dubai, UAE to London, UK added to system."
+    },
+    {
+      "timestamp": "2026-05-20T19:35:35.212Z",
+      "action": "SHIPMENT_ADDED",
+      "result": "Success",
+      "details": "New shipment SH-005 dispatched. Inventory adjusted for: Microchips (x100)."
     }
   ],
   "notifications": [],
