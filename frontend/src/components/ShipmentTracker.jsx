@@ -3,6 +3,14 @@ import { motion } from 'framer-motion';
 import { Box, MapPin, Calendar, ArrowRight, ShieldCheck, Navigation } from 'lucide-react';
 
 const ShipmentTracker = ({ shipments }) => {
+  const getFirstItemText = (items) => {
+    if (!items || items.length === 0) return 'No items';
+    const first = items[0];
+    if (typeof first === 'string') return first;
+    if (first && typeof first === 'object' && first.name) return first.name;
+    return 'Unnamed Item';
+  };
+
   return (
     <div className="glass-card flex flex-col h-full">
       <div className="flex items-center justify-between mb-8">
@@ -42,7 +50,9 @@ const ShipmentTracker = ({ shipments }) => {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-500 tracking-tighter uppercase mb-0.5">{shipment.id}</p>
-                    <h3 className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">{shipment.items[0]}...</h3>
+                    <h3 className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">
+                      {getFirstItemText(shipment.items)}{shipment.items?.length > 1 ? ` (+${shipment.items.length - 1})` : ''}
+                    </h3>
                   </div>
                 </div>
                 <span className={`status-badge ${

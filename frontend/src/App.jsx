@@ -346,7 +346,10 @@ function App() {
     s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.items.some(item => item.toLowerCase().includes(searchQuery.toLowerCase()))
+    s.items.some(item => {
+      const val = typeof item === 'object' ? (item?.name || '') : (item || '');
+      return val.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    })
   ) || [];
 
   const filteredLogs = state?.logs.filter(log =>
