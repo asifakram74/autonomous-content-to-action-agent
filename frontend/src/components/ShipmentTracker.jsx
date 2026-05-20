@@ -46,30 +46,45 @@ const ShipmentTracker = ({ shipments }) => {
                   </div>
                 </div>
                 <span className={`status-badge ${
-                  shipment.status === 'Rerouted' ? 'status-rerouted' : 'status-in-transit'
+                  shipment.status === 'Rerouted' ? 'status-rerouted' :
+                  shipment.status === 'Loading' ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' :
+                  'status-in-transit'
                 }`}>
                   {shipment.status}
                 </span>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mb-5 pl-1">
-                <div className="flex items-center gap-1.5 min-w-[100px]">
+                <div className="flex items-center gap-1.5 min-w-[90px]">
                   <MapPin size={12} className="text-slate-600" />
                   <span className="truncate">{shipment.origin.split(',')[0]}</span>
                 </div>
+                
                 <div className="flex-1 flex items-center gap-2">
-                   <div className="h-[1px] flex-1 bg-gradient-to-r from-white/5 via-white/20 to-white/5 relative">
+                  <div className="h-[2px] flex-1 bg-white/5 rounded relative overflow-hidden">
+                    <div className={`absolute inset-y-0 left-0 rounded ${
+                      shipment.status === 'Rerouted' ? 'bg-gradient-to-r from-[#bc13fe] to-[#00f2ff] w-full' :
+                      shipment.status === 'Loading' ? 'bg-amber-500/20 w-0' :
+                      'bg-gradient-to-r from-[#00f2ff]/20 to-[#00f2ff] w-2/3'
+                    }`} />
+                    {shipment.status !== 'Loading' && (
                       <motion.div 
                         initial={{ left: '0%' }}
-                        animate={{ left: '100%' }}
+                        animate={{ left: shipment.status === 'Rerouted' ? '100%' : '66%' }}
                         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        className="absolute top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#00f2ff] shadow-[0_0_8px_#00f2ff]"
+                        className={`absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] ${
+                          shipment.status === 'Rerouted' ? 'text-[#bc13fe] bg-[#bc13fe]' : 'text-[#00f2ff] bg-[#00f2ff]'
+                        }`}
                       />
-                   </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 min-w-[100px] justify-end">
-                  <span className="text-cyan-400 truncate">{shipment.destination.split(',')[0]}</span>
-                  <MapPin size={12} className="text-cyan-400" />
+
+                <div className="flex items-center gap-1.5 min-w-[90px] justify-end">
+                  <span className={`${shipment.status === 'Rerouted' ? 'text-purple-400' : 'text-cyan-400'} truncate`}>
+                    {shipment.destination.split(',')[0]}
+                  </span>
+                  <MapPin size={12} className={shipment.status === 'Rerouted' ? 'text-purple-400' : 'text-cyan-400'} />
                 </div>
               </div>
 
@@ -90,7 +105,7 @@ const ShipmentTracker = ({ shipments }) => {
                 <motion.div 
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  className="mt-4 p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl text-[11px] text-purple-300 italic flex gap-2"
+                  className="mt-4 p-3 bg-[#bc13fe]/5 border border-[#bc13fe]/10 rounded-xl text-[11px] text-purple-300 italic flex gap-2"
                 >
                   <Navigation size={12} className="mt-0.5 shrink-0" />
                   <span>Neural reroute via Rotterdam applied to avoid Hamburg strike disruption.</span>

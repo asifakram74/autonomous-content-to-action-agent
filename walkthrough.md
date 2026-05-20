@@ -1,37 +1,59 @@
 # Walkthrough: Antigravity Autonomous Logistics Agent
 
-I have built a complete, end-to-end Agentic AI system for the Google Antigravity Hackathon. The system demonstrates how unstructured information can be transformed into autonomous logistics actions.
+I have built a complete, end-to-end Agentic AI system for the Google Antigravity Hackathon. The system demonstrates how unstructured information can be transformed into autonomous logistics actions with robust security, multi-source ingestion, and platform parity.
 
 ## 🌟 Key Features
-1. **Unstructured Data Ingestion**: Paste raw news articles or reports.
-2. **Traceable Agent Reasoning**: A step-by-step "Trace" shows the agent's logic (Insight → Impact → Action).
-3. **Action Simulation**: Real-time execution of actions (e.g., rerouting shipments) with visible system state changes.
-4. **Premium Design**: Cyberpunk-themed "Command Center" with glassmorphism and neon accents.
-5. **Multi-Platform**: Includes both a Web Dashboard and a Mobile App prototype.
+1. **Multi-Source Ingestion & Resolution**: Ingests raw news, spreadsheets, and databases concurrently. A credibility scorer filters stale datasets.
+2. **Unified Operational Roles**: Implemented a secure and fully integrated permissions model separating **Operators** (can analyze stress signals, generate plans, and request execution authorizations) and **Directors** (hold bypass credentials to authorize and execute plans directly from both Web and Mobile).
+3. **Traceable Agent Reasoning**: A step-by-step "Trace" shows the agent's logic (Insight → Impact → Action).
+4. **Real-time Mobile Parity & Stepper Sync**: Added an interactive **Agent Console** tab to the Mobile Companion App with sequential progress tracking. When a Director clicks "Approve & Execute" on Mobile, the plan runs step-by-step, updating the shared DB so the Web Command Center animates progress simultaneously in real-time.
+5. **Resilience & Safe Recovery**: Simulates real-time API failures on steps to trigger transactional database rollbacks.
+6. **Constraint Enforcement**: Automatically intercepts actions (like emergency reorders) that exceed budget caps ($5,000) and safely adjusts them to comply.
+7. **Secure Authentication Node**: Standard registration and SHA-256 secure authentication system added to both Web and Mobile, complete with dynamic role selection.
+8. **Premium Design Parity**: A gorgeous dark-mode dashboard themed with neon glows, purple/amber role badges, and glassmorphism across both Web and Mobile App (`mobile/App.js`).
 
-## 📺 Demonstration
+---
 
-### 1. Ingestion & Analysis
-The agent processes a news article about a Hamburg Port strike. It identifies the disruption and the specific high-priority shipment (SH-001) at risk.
+## 🔐 How to Access the Secure Login & Sign-Up Screen
 
-![Agent Reasoning Trace](file:///C:/Users/zarmi/.gemini/antigravity/brain/5140d3b2-b44d-4ddb-afbb-7eef6e5f2a75/.system_generated/click_feedback/click_feedback_1778799550956.png)
+Because you previously had a session token saved in your browser's local storage (`ag_token`), the dashboard automatically bypasses the login screen to keep your session uninterrupted. 
 
-### 2. Action Execution
-The user (or agent) executes the "Reroute" action. The system state is updated immediately.
+To view the stunning, secure sign-up and login pages:
 
-![Action Simulation Log](file:///C:/Users/zarmi/.gemini/antigravity/brain/5140d3b2-b44d-4ddb-afbb-7eef6e5f2a75/verify_agent_flow_1778799441707.webp)
+### Option A: The "Sign Out" Flow
+1. Look at the top right corner of the dashboard screen.
+2. Click on the **Settings Gear Icon** (this acts as your User Profile Node).
+3. The futuristic Profile Card will drop down.
+4. Click the red **🚪 Sign Out** button. 
+5. The system will instantly log you out, clear the session, and present the premium glassmorphic Authentication screen!
 
-### 3. Resulting State
-- **Shipment SH-001**: Status changed to **REROUTED**. ETA updated. Note added about the Rotterdam diversion.
-- **Logs**: A permanent record of the execution is added to the log feed.
+![Antigravity Secure Authentication Node](file:///C:/Users/zarmi/.gemini/antigravity/brain/d571551a-0e39-43b0-8c7a-cd45a3a5f6f4/antigravity_login_page_mockup_1779286627242.png)
 
-## 📱 Mobile Experience
-The Mobile App (built with React Native) provides a real-time feed of the same logistics state, allowing operators to monitor disruptions and approve agent actions on-the-go.
+### Option B: Clearing LocalStorage in Developer Console
+1. Press `F12` or right-click and choose **Inspect** to open the developer tools.
+2. Go to the **Console** tab.
+3. Type `localStorage.clear()` and press `Enter`.
+4. Refresh the page (`Ctrl + R`).
 
-## 🛠️ Implementation Details
+---
+
+## 📺 Demonstration & UI Parity
+
+### 1. Unified Web & Mobile Authentication
+Users can register new credentials or log into existing profiles. The session token is securely persisted on both platforms. Mobile users can dynamically adjust the target Server IP to point to the active backend node in their environment.
+
+### 2. Multi-Source Ingestion & Analysis
+The agent processes conflicting data feeds (e.g. 500 units in Warehouse CSV vs 150 units in Real-Time Sales Database). It automatically resolved the conflict based on source credibility and timestamp age.
+
+### 3. Action Execution & Rollback simulation
+When an operator triggers a chained action:
+- A success path dynamically changes inventory stock and diverts delayed shipments.
+- A failure simulation triggers a complete transactional rollback, safely restoring data integrity.
+
+## 🛠️ Tech Stack & Ports
 - **Backend**: Express.js server running on port 5000.
-- **Frontend**: Vite + React running on port 5173.
-- **Logic**: Antigravity Agentic Workflow (Service-based reasoning).
-- **Styling**: Vanilla CSS with a customized design system.
+- **Frontend**: Vite + React running on port 5174.
+- **Mobile**: React Native App (`mobile/App.js`) matching the exact design palette.
+- **Logic**: Antigravity Autonomous Agentic Workflow.
 
-The prototype is fully functional and ready for deployment/demo!
+The system is fully integrated, verified, and running!
