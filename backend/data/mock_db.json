@@ -53,5 +53,6 @@
     }
   ],
   "logs": [],
-  "notifications": []
+  "notifications": [],
+  "activeTrace": null
 }

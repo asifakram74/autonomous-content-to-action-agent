@@ -639,7 +639,7 @@ function App() {
       {/* ── Main Panel ── */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto custom-scrollbar">
         {/* Header */}
-        <header className="h-20 border-b border-white/5 bg-[#05060a]/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-50">
+        <header className="h-20 border-b border-white/5 bg-[#05060a]/80 backdrop-blur-md flex items-center justify-between p-8 sticky top-0 z-50">
           {/* Search */}
           <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-2.5 border border-white/5 focus-within:border-cyan-500/40 focus-within:bg-white/[0.07] focus-within:shadow-[0_0_15px_rgba(0,242,255,0.05)] transition-all">
             <Search size={16} className="text-slate-400" />
