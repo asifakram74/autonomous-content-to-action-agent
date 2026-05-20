@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import AgentConsole from './components/AgentConsole';
 import ShipmentTracker from './components/ShipmentTracker';
+import DataManager from './components/DataManager';
 
 const API = 'http://localhost:5000';
 
@@ -773,9 +774,12 @@ function App() {
                  'Complete history of log ingestions, mitigations, and execution recovery runs.'}
               </p>
             </div>
-            <div className="bg-[#00f2ff]/10 px-4 py-2 rounded-lg border border-[#00f2ff]/20 flex items-center gap-2">
-              <Activity size={16} className="text-[#00f2ff]" />
-              <span className="text-xs font-bold text-[#00f2ff] tracking-wider uppercase">Live Neural Feed</span>
+            <div className="flex items-center gap-3">
+              <DataManager shipments={state?.shipments || []} inventory={state?.inventory || []} onRefresh={fetchState} />
+              <div className="bg-[#00f2ff]/10 px-4 py-2 rounded-lg border border-[#00f2ff]/20 flex items-center gap-2">
+                <Activity size={16} className="text-[#00f2ff]" />
+                <span className="text-xs font-bold text-[#00f2ff] tracking-wider uppercase">Live Neural Feed</span>
+              </div>
             </div>
           </div>
 

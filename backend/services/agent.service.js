@@ -221,7 +221,13 @@ Strict requirements:
 
         // 3. State Modification Logic
         if (action.type === 'DIAGNOSE') {
-            logDetails = `System Diagnosis Verified: True Microchips stock level verified as 150 units. Conflicting warehouse spreadsheet (stale 2 days) down-ranked.`;
+            // Find the targeted inventory item or provide a generic diagnosis
+            const targetItem = db.inventory.find(i => action.target && i.item.toLowerCase().includes(action.target.toLowerCase()));
+            if (targetItem) {
+                logDetails = `System Diagnosis Verified: True ${targetItem.item} stock level verified as ${targetItem.stock} units. Conflicting data sources resolved.`;
+            } else {
+                logDetails = `System Diagnosis Complete: All data sources verified and reconciled for target "${action.target || 'System'}".`;
+            }
         } else if (action.type === 'NOTIFY') {
             db.notifications.push({
                 timestamp: new Date().toISOString(),
@@ -230,22 +236,33 @@ Strict requirements:
             });
             logDetails = `Stakeholders notified: "${action.description}"`;
         } else if (action.type === 'REORDER') {
-            const microchips = db.inventory.find(i => i.item === 'Microchips');
-            if (microchips) {
-                microchips.stock += 100;
-                microchips.status = 'Healthy';
-                logDetails = `Emergency restock processed: 100 units of Microchips ordered. Stock increased to 250 units. Status: Healthy. Budget allocated: $${action.cost}.`;
+            // Find the targeted inventory item dynamically
+            const targetItem = db.inventory.find(i => action.target && i.item.toLowerCase().includes(action.target.toLowerCase()));
+            if (targetItem) {
+                const prevStock = targetItem.stock;
+                targetItem.stock += 100;
+                targetItem.status = targetItem.stock > targetItem.reorder_point ? 'Healthy' : 'Low Stock';
+                logDetails = `Emergency restock processed: 100 units of ${targetItem.item} ordered. Stock increased from ${prevStock} to ${targetItem.stock} units. Status: ${targetItem.status}. Budget allocated: $${action.cost}.`;
+            } else {
+                logDetails = `Reorder action executed for target "${action.target}". Budget allocated: $${action.cost}.`;
             }
         } else if (action.type === 'REROUTE') {
-            const shipment = db.shipments.find(s => s.id === 'SH-001');
+            // Find the targeted shipment dynamically
+            const shipment = db.shipments.find(s => action.target && s.id === action.target);
             if (shipment) {
+                const prevStatus = shipment.status;
+                const prevLocation = shipment.current_location;
                 shipment.status = 'Rerouted';
-                shipment.current_location = 'Diverted via Rotterdam';
-                shipment.eta = '2026-05-18'; // Saves 2 days from delays
-                logDetails = `Shipment SH-001 rerouted via Port of Rotterdam to bypass Hamburg port strike. Global Fleet updated. ETA adjusted.`;
+                shipment.current_location = 'Diverted via alternate route';
+                logDetails = `Shipment ${shipment.id} rerouted from "${prevLocation}" (was: ${prevStatus}). Route changed to bypass disruption. Global Fleet updated.`;
+            } else {
+                logDetails = `Reroute action executed for target "${action.target}".`;
             }
         } else if (action.type === 'MONITOR') {
-            logDetails = `Chrono-monitoring routine successfully active for Microchips stock and SH-001 route. Polling active.`;
+            const targets = [];
+            if (db.inventory.length > 0) targets.push(`${db.inventory.length} inventory items`);
+            if (db.shipments.length > 0) targets.push(`${db.shipments.length} active shipments`);
+            logDetails = `Chrono-monitoring routine active for ${targets.join(' and ') || 'system'}. Polling active.`;
         }
 
         db.logs.push({

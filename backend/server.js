@@ -315,6 +315,130 @@ app.post('/api/agent/approve', (req, res) => {
     }
 });
 
+// ── Shipment CRUD ──────────────────────────────────────────────────────────
+
+// Add a new shipment
+app.post('/api/shipments', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const { id, origin, destination, status, current_location, eta, items, priority } = req.body;
+        if (!id || !origin || !destination) {
+            return res.status(400).json({ error: 'id, origin, and destination are required' });
+        }
+        if (db.shipments.find(s => s.id === id)) {
+            return res.status(400).json({ error: `Shipment ${id} already exists` });
+        }
+        const shipment = {
+            id,
+            origin,
+            destination,
+            status: status || 'Pending',
+            current_location: current_location || origin,
+            eta: eta || '',
+            items: Array.isArray(items) ? items : (items ? [items] : []),
+            priority: priority || 'Medium'
+        };
+        db.shipments.push(shipment);
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_ADDED', result: 'Success', details: `New shipment ${id} from ${origin} to ${destination} added to system.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Shipment added', shipment });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update an existing shipment
+app.put('/api/shipments/:id', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const idx = db.shipments.findIndex(s => s.id === req.params.id);
+        if (idx === -1) return res.status(404).json({ error: 'Shipment not found' });
+        db.shipments[idx] = { ...db.shipments[idx], ...req.body, id: req.params.id };
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_UPDATED', result: 'Success', details: `Shipment ${req.params.id} updated manually.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Shipment updated', shipment: db.shipments[idx] });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete a shipment
+app.delete('/api/shipments/:id', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const idx = db.shipments.findIndex(s => s.id === req.params.id);
+        if (idx === -1) return res.status(404).json({ error: 'Shipment not found' });
+        db.shipments.splice(idx, 1);
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_REMOVED', result: 'Success', details: `Shipment ${req.params.id} removed from system.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Shipment deleted' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ── Inventory CRUD ─────────────────────────────────────────────────────────
+
+// Add a new inventory item
+app.post('/api/inventory', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const { item, stock, reorder_point } = req.body;
+        if (!item || stock === undefined) {
+            return res.status(400).json({ error: 'item and stock are required' });
+        }
+        if (db.inventory.find(i => i.item.toLowerCase() === item.toLowerCase())) {
+            return res.status(400).json({ error: `Inventory item "${item}" already exists` });
+        }
+        const rp = reorder_point || Math.floor(stock * 0.4);
+        const newItem = {
+            item,
+            stock: Number(stock),
+            reorder_point: Number(rp),
+            status: Number(stock) <= Number(rp) ? 'Low Stock' : 'Healthy'
+        };
+        db.inventory.push(newItem);
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'INVENTORY_ADDED', result: 'Success', details: `New inventory item "${item}" added with stock ${stock}.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Inventory item added', item: newItem });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update inventory item by name
+app.put('/api/inventory/:item', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const idx = db.inventory.findIndex(i => i.item.toLowerCase() === req.params.item.toLowerCase());
+        if (idx === -1) return res.status(404).json({ error: 'Inventory item not found' });
+        const updated = { ...db.inventory[idx], ...req.body };
+        updated.status = Number(updated.stock) <= Number(updated.reorder_point) ? 'Low Stock' : 'Healthy';
+        db.inventory[idx] = updated;
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'INVENTORY_UPDATED', result: 'Success', details: `Inventory item "${req.params.item}" updated. Stock: ${updated.stock}.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Inventory updated', item: db.inventory[idx] });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete inventory item by name
+app.delete('/api/inventory/:item', (req, res) => {
+    try {
+        const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+        const idx = db.inventory.findIndex(i => i.item.toLowerCase() === req.params.item.toLowerCase());
+        if (idx === -1) return res.status(404).json({ error: 'Inventory item not found' });
+        db.inventory.splice(idx, 1);
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'INVENTORY_REMOVED', result: 'Success', details: `Inventory item "${req.params.item}" removed from system.` });
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+        res.json({ message: 'Inventory item deleted' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`[Antigravity Backend] Server running on port ${PORT}`);
 });
+
