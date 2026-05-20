@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Package, Truck, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Plus, X, Package, Truck, Trash2, AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react';
 
 const API = 'http://localhost:5000';
 
@@ -11,17 +11,28 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
 
+  const [editingId, setEditingId] = useState(null);
+
   // Shipment form
   const [sf, setSf] = useState({ id: '', origin: '', destination: '', items: [], priority: 'Medium', eta: '' });
   // Inventory form
   const [inv, setInv] = useState({ item: '', stock: '', reorder_point: '' });
 
   const toggleItem = (itemName) => {
+    setSf(prev => {
+      const exists = prev.items.find(i => i.name === itemName);
+      if (exists) {
+        return { ...prev, items: prev.items.filter(i => i.name !== itemName) };
+      } else {
+        return { ...prev, items: [...prev.items, { name: itemName, qty: 1 }] };
+      }
+    });
+  };
+
+  const updateItemQty = (itemName, qty) => {
     setSf(prev => ({
       ...prev,
-      items: prev.items.includes(itemName)
-        ? prev.items.filter(i => i !== itemName)
-        : [...prev.items, itemName]
+      items: prev.items.map(i => i.name === itemName ? { ...i, qty: Math.max(1, parseInt(qty) || 1) } : i)
     }));
   };
 
@@ -35,17 +46,34 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
     if (sf.items.length === 0) return flash('Please select at least one item', 'error');
     setLoading(true);
     try {
-      await axios.post(`${API}/api/shipments`, {
-        ...sf,
-      });
-      flash(`Shipment ${sf.id} added successfully`);
+      if (editingId) {
+        await axios.put(`${API}/api/shipments/${editingId}`, sf);
+        flash(`Shipment ${sf.id} updated successfully`);
+      } else {
+        await axios.post(`${API}/api/shipments`, sf);
+        flash(`Shipment ${sf.id} added successfully`);
+      }
       setSf({ id: '', origin: '', destination: '', items: [], priority: 'Medium', eta: '' });
+      setEditingId(null);
       onRefresh();
     } catch (err) {
-      flash(err.response?.data?.error || 'Failed to add shipment', 'error');
+      flash(err.response?.data?.error || 'Failed to save shipment', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const startEdit = (s) => {
+    setEditingId(s.id);
+    setSf({
+      id: s.id,
+      origin: s.origin,
+      destination: s.destination,
+      items: Array.isArray(s.items) ? (typeof s.items[0] === 'string' ? s.items.map(name => ({ name, qty: 1 })) : s.items) : [],
+      priority: s.priority,
+      eta: s.eta || ''
+    });
+    setTab('shipments');
   };
 
   const deleteShipment = async (id) => {
@@ -179,7 +207,7 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className={labelCls}>Shipment ID</label>
-                          <input className={inputCls} placeholder="SH-004" value={sf.id} onChange={e => setSf(p => ({ ...p, id: e.target.value }))} required />
+                          <input className={inputCls} placeholder="SH-004" value={sf.id} onChange={e => setSf(p => ({ ...p, id: e.target.value }))} required disabled={!!editingId} />
                         </div>
                         <div>
                           <label className={labelCls}>Priority</label>
@@ -201,13 +229,12 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                             <button
                               type="button"
                               onClick={() => {
-                                // Toggle a local visibility state if needed, but for now we'll use a simple dropdown
                                 const el = document.getElementById('inv-dropdown');
                                 el.classList.toggle('hidden');
                               }}
                               className={`${inputCls} flex items-center justify-between group-hover:border-cyan-500/30`}
                             >
-                              <span className="truncate">
+                              <span className="truncate text-slate-400">
                                 {sf.items.length === 0 ? 'Choose items...' : `${sf.items.length} item(s) selected`}
                               </span>
                               <ChevronRight size={14} className="text-slate-500 transform rotate-90" />
@@ -225,25 +252,38 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                                     key={i.item}
                                     onClick={() => toggleItem(i.item)}
                                     className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
-                                      sf.items.includes(i.item) 
+                                      sf.items.find(si => si.name === i.item) 
                                         ? 'bg-cyan-500/10 text-cyan-400' 
                                         : 'hover:bg-white/5 text-slate-400'
                                     }`}
                                   >
                                     <span className="text-xs font-bold">{i.item}</span>
-                                    {sf.items.includes(i.item) && <CheckCircle2 size={14} />}
+                                    {sf.items.find(si => si.name === i.item) && <CheckCircle2 size={14} />}
                                   </div>
                                 ))
                               )}
                             </div>
                           </div>
                           {sf.items.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {sf.items.map(name => (
-                                <span key={name} className="px-2 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase">
-                                  {name}
-                                </span>
-                              ))}
+                            <div className="space-y-2 mt-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                              <label className={labelCls}>Selected Items & Quantities</label>
+                              <div className="grid grid-cols-1 gap-2">
+                                {sf.items.map(si => (
+                                  <div key={si.name} className="flex items-center justify-between bg-white/[0.03] p-2 rounded-xl border border-white/5">
+                                    <span className="text-xs font-bold text-slate-300">{si.name}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] text-slate-500 uppercase font-black">Qty:</span>
+                                      <input 
+                                        type="number" 
+                                        value={si.qty} 
+                                        onChange={(e) => updateItemQty(si.name, e.target.value)}
+                                        className="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-cyan-400 outline-none focus:border-cyan-500/50"
+                                        min="1"
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -252,13 +292,27 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                           <input className={inputCls} type="date" value={sf.eta} onChange={e => setSf(p => ({ ...p, eta: e.target.value }))} />
                         </div>
                       </div>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#00c8d4] to-[#bc13fe] text-white text-xs font-black uppercase tracking-wider hover:shadow-[0_0_20px_rgba(0,242,255,0.2)] transition-all disabled:opacity-50"
-                      >
-                        {loading ? 'Adding…' : 'Add Shipment'}
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="flex-1 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#00c8d4] to-[#bc13fe] text-white text-xs font-black uppercase tracking-wider hover:shadow-[0_0_20px_rgba(0,242,255,0.2)] transition-all disabled:opacity-50"
+                        >
+                          {loading ? 'Saving…' : (editingId ? 'Update Shipment' : 'Add Shipment')}
+                        </button>
+                        {editingId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(null);
+                              setSf({ id: '', origin: '', destination: '', items: [], priority: 'Medium', eta: '' });
+                            }}
+                            className="px-6 py-2.5 rounded-xl bg-white/5 text-slate-400 text-xs font-black uppercase hover:bg-white/10 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </form>
 
                     {/* Shipments List */}
@@ -278,12 +332,20 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                                 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
                               }`}>{s.priority}</span>
                             </div>
-                            <button
-                              onClick={() => deleteShipment(s.id)}
-                              className="p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              <button
+                                onClick={() => startEdit(s)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
+                              >
+                                <Plus size={14} className="rotate-45" /> {/* Just using an icon for edit or similar */}
+                              </button>
+                              <button
+                                onClick={() => deleteShipment(s.id)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}

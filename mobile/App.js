@@ -393,7 +393,7 @@ export default function App() {
               <Text style={s.logoutText}>🚪  Sign Out</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+
       </Modal>
 
       {/* ── Data Manager Modal ── */}
@@ -643,7 +643,6 @@ function AgentTab({ state, user, baseUrl, onStateUpdate }) {
       </View>
     );
   }
-
   const overallStatusText = () => {
     switch (trace.status) {
       case 'PENDING': return 'Pending Approval';
@@ -889,7 +888,7 @@ function SectionHeader({ title, icon }) {
 }
 
 // ─── Data Manager Modal ──────────────────────────────────────────────────────
-function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
+function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh, fetchState }) {
   const [tab, setTab] = useState('SHIPMENTS');
   const [loading, setLoading] = useState(false);
   
@@ -897,44 +896,69 @@ function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
   const [sId, setSId] = useState('');
   const [sOrigin, setSOrigin] = useState('');
   const [sDest, setSDest] = useState('');
-  const [sItems, setSItems] = useState([]);
+  const [sItems, setSItems] = useState([]); // Array of objects { name, qty }
   const [sPriority, setSPriority] = useState('Medium');
+  const [sEta, setSEta] = useState('');
+  const [showInvDropdown, setShowInvDropdown] = useState(false);
+  const [editingSId, setEditingSId] = useState(null);
 
   const toggleItem = (itemName) => {
-    setSItems(prev => prev.includes(itemName)
-      ? prev.filter(i => i !== itemName)
-      : [...prev, itemName]
-    );
+    const exists = sItems.find(i => i.name === itemName);
+    if (exists) {
+      setSItems(sItems.filter(i => i.name !== itemName));
+    } else {
+      setSItems([...sItems, { name: itemName, qty: 1 }]);
+    }
+  };
+
+  const updateItemQty = (itemName, qty) => {
+    setSItems(sItems.map(i => i.name === itemName ? { ...i, qty: Math.max(1, parseInt(qty) || 1) } : i));
+  };
+
+  const addShipment = async () => {
+    if (!sId || !sOrigin || !sDest || sItems.length === 0) return;
+    setLoading(true);
+    try {
+      if (editingSId) {
+        await axios.put(`${baseUrl}/api/shipments/${editingSId}`, {
+          id: sId, origin: sOrigin, destination: sDest, items: sItems, priority: sPriority, eta: sEta
+        });
+      } else {
+        await axios.post(`${baseUrl}/api/shipments`, {
+          id: sId, origin: sOrigin, destination: sDest, items: sItems, priority: sPriority, eta: sEta
+        });
+      }
+      setSId(''); setSOrigin(''); setSDest(''); setSItems([]); setSEta(''); setEditingSId(null);
+      fetchState();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEdit = (s) => {
+    setEditingSId(s.id);
+    setSId(s.id);
+    setSOrigin(s.origin);
+    setSDest(s.destination);
+    setSItems(Array.isArray(s.items) ? (typeof s.items[0] === 'string' ? s.items.map(name => ({ name, qty: 1 })) : s.items) : []);
+    setSPriority(s.priority);
+    setSEta(s.eta || '');
+    setTab('SHIPMENTS');
+  };
+
+  const deleteShipment = async (id) => {
+    try {
+      await axios.delete(`${baseUrl}/api/shipments/${id}`);
+      fetchState();
+    } catch (e) { console.error(e); }
   };
 
   const [iName, setIName] = useState('');
   const [iStock, setIStock] = useState('');
   const [iReorder, setIReorder] = useState('');
   const [showInvDropdown, setShowInvDropdown] = useState(false);
-
-  const addShipment = async () => {
-    if (!sId || !sOrigin || !sDest || sItems.length === 0) return;
-    setLoading(true);
-    try {
-      await axios.post(`${baseUrl}/api/shipments`, {
-        id: sId,
-        origin: sOrigin,
-        destination: sDest,
-        items: sItems,
-        priority: sPriority
-      });
-      setSId(''); setSOrigin(''); setSDest(''); setSItems([]);
-      onRefresh();
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
-
-  const deleteShipment = async (id) => {
-    try {
-      await axios.delete(`${baseUrl}/api/shipments/${id}`);
-      onRefresh();
-    } catch (e) { console.error(e); }
-  };
 
   const addInventory = async () => {
     if (!iName || !iStock) return;
@@ -1004,7 +1028,7 @@ function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
           {tab === 'SHIPMENTS' ? (
             <>
               <View style={[s.card, { backgroundColor: C.surface, marginBottom: 20 }]}>
-                <Text style={[s.sectionTitle, { marginBottom: 12, color: C.cyan }]}>+ ADD NEW SHIPMENT</Text>
+                <Text style={[s.sectionTitle, { marginBottom: 12, color: C.cyan }]}>+ {editingSId ? 'EDIT SHIPMENT' : 'ADD NEW SHIPMENT'}</Text>
                 
                 <Text style={labelStyle}>Shipment ID</Text>
                 <TextInput style={inputStyle} value={sId} onChangeText={setSId} placeholder="SH-100" placeholderTextColor={C.textMute} />
@@ -1056,13 +1080,13 @@ function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
                                 alignItems: 'center', 
                                 padding: 12, 
                                 borderRadius: 8, 
-                                backgroundColor: sItems.includes(i.item) ? C.cyan + '10' : 'transparent' 
+                                backgroundColor: sItems.find(si => si.name === i.item) ? C.cyan + '10' : 'transparent' 
                               }}
                             >
-                              <Text style={{ color: sItems.includes(i.item) ? C.cyan : C.textDim, fontSize: 13, fontWeight: sItems.includes(i.item) ? '700' : '400' }}>
+                              <Text style={{ color: sItems.find(si => si.name === i.item) ? C.cyan : C.textDim, fontSize: 13, fontWeight: sItems.find(si => si.name === i.item) ? '700' : '400' }}>
                                 {i.item}
                               </Text>
-                              {sItems.includes(i.item) && <Text style={{ color: C.cyan }}>✔</Text>}
+                              {sItems.find(si => si.name === i.item) && <Text style={{ color: C.cyan }}>✔</Text>}
                             </TouchableOpacity>
                           ))
                         )}
@@ -1071,15 +1095,28 @@ function DataManagerModal({ visible, onClose, state, baseUrl, onRefresh }) {
                   )}
                   
                   {sItems.length > 0 && (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                      {sItems.map(name => (
-                        <View key={name} style={{ backgroundColor: C.cyan + '15', borderRadius: 6, borderWith: 1, borderColor: C.cyan + '30', paddingHorizontal: 8, paddingVertical: 4 }}>
-                          <Text style={{ color: C.cyan, fontSize: 9, fontWeight: '900' }}>{name.toUpperCase()}</Text>
+                    <View style={{ marginTop: 15, padding: 12, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 12, borderWidth: 1, borderColor: C.border }}>
+                      <Text style={[labelStyle, { marginBottom: 10 }]}>ITEMS & QUANTITIES</Text>
+                      {sItems.map(si => (
+                        <View key={si.name} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, backgroundColor: 'rgba(255,255,255,0.03)', padding: 8, borderRadius: 8 }}>
+                          <Text style={{ color: C.textDim, fontSize: 12, fontWeight: '700' }}>{si.name}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={{ color: C.textMute, fontSize: 9, fontWeight: '900' }}>QTY:</Text>
+                            <TextInput 
+                              style={{ width: 45, backgroundColor: 'rgba(0,0,0,0.3)', color: C.cyan, textAlign: 'center', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 2, fontSize: 12, fontWeight: 'bold', borderWidth: 1, borderColor: C.border }}
+                              keyboardType="numeric"
+                              value={(si.qty || 1).toString()}
+                              onChangeText={(v) => updateItemQty(si.name, v)}
+                            />
+                          </View>
                         </View>
                       ))}
                     </View>
                   )}
                 </View>
+
+                <Text style={labelStyle}>ETA (YYYY-MM-DD)</Text>
+                <TextInput style={inputStyle} value={sEta} onChangeText={setSEta} placeholder="2026-05-30" placeholderTextColor={C.textMute} />
 
                 <TouchableOpacity 
                   style={[s.authSubmitBtn, { marginTop: 10, paddingVertical: 12 }]} 

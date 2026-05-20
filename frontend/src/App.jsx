@@ -99,11 +99,10 @@ function AuthScreen({ onAuth }) {
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all duration-300 ${
-                  mode === m
+                className={`flex-1 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all duration-300 ${mode === m
                     ? 'bg-gradient-to-r from-[#00f2ff]/20 to-[#bc13fe]/20 text-white border border-white/10 shadow-inner'
                     : 'text-slate-500 hover:text-slate-300'
-                }`}
+                  }`}
               >
                 {m === 'login' ? 'Sign In' : 'Register'}
               </button>
@@ -154,11 +153,10 @@ function AuthScreen({ onAuth }) {
                           key={r}
                           type="button"
                           onClick={() => update('role', r)}
-                          className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all duration-300 ${
-                            form.role === r
+                          className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all duration-300 ${form.role === r
                               ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                               : 'bg-white/[0.02] text-slate-400 border-white/5 hover:border-white/10'
-                          }`}
+                            }`}
                         >
                           {r}
                         </button>
@@ -358,8 +356,8 @@ function App() {
 
   // ── Dashboard ──
   const renderDashboardView = () => (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-      <div className="xl:col-span-7 space-y-8">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="xl:col-span-7 space-y-6">
         <AgentConsole onStateUpdate={fetchState} userRole={user?.role} activeTrace={state?.activeTrace} />
         <div className="glass-card">
           <div className="flex items-center justify-between mb-6">
@@ -387,12 +385,11 @@ function App() {
                 >
                   <span className="text-slate-600 font-mono text-xs mt-1 shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
                   <div>
-                    <span className={`inline-block px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-tighter mr-3 border ${
-                      log.action === 'ROLLBACK' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                      log.action === 'REORDER'  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                      log.action === 'REROUTE'  ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                      'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                    }`}>
+                    <span className={`inline-block px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-tighter mr-3 border ${log.action === 'ROLLBACK' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                        log.action === 'REORDER' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                          log.action === 'REROUTE' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                            'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                      }`}>
                       {log.action}
                     </span>
                     <p className="text-sm text-slate-300 leading-relaxed font-medium mt-1">{log.details}</p>
@@ -404,7 +401,7 @@ function App() {
         </div>
       </div>
 
-      <div className="xl:col-span-5 space-y-8">
+      <div className="xl:col-span-5 space-y-6">
         <ShipmentTracker shipments={filteredShipments} />
         <div className="glass-card">
           <div className="flex items-center gap-2 mb-6">
@@ -459,11 +456,11 @@ function App() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[
-            { name: 'Hamburg Terminal Node',    code: 'HAM-CENTRAL',  ping: '14ms',  throughput: '1.8 GB/s', capacity: 'Normal',       alerts: 1 },
-            { name: 'Rotterdam Shipping Port',  code: 'ROT-DECK',     ping: '18ms',  throughput: '2.4 GB/s', capacity: 'Normal',       alerts: 0 },
-            { name: 'Shanghai Transit Hub',     code: 'SHG-PRIMARY',  ping: '108ms', throughput: '4.2 GB/s', capacity: 'High Traffic', alerts: 0 },
-            { name: 'New York Gate Hub',        code: 'NYC-EAST',     ping: '42ms',  throughput: '3.1 GB/s', capacity: 'Normal',       alerts: 0 },
-            { name: 'Los Angeles Terminal',     code: 'LAX-WEST',     ping: '58ms',  throughput: '2.9 GB/s', capacity: 'Normal',       alerts: 0 },
+            { name: 'Hamburg Terminal Node', code: 'HAM-CENTRAL', ping: '14ms', throughput: '1.8 GB/s', capacity: 'Normal', alerts: 1 },
+            { name: 'Rotterdam Shipping Port', code: 'ROT-DECK', ping: '18ms', throughput: '2.4 GB/s', capacity: 'Normal', alerts: 0 },
+            { name: 'Shanghai Transit Hub', code: 'SHG-PRIMARY', ping: '108ms', throughput: '4.2 GB/s', capacity: 'High Traffic', alerts: 0 },
+            { name: 'New York Gate Hub', code: 'NYC-EAST', ping: '42ms', throughput: '3.1 GB/s', capacity: 'Normal', alerts: 0 },
+            { name: 'Los Angeles Terminal', code: 'LAX-WEST', ping: '58ms', throughput: '2.9 GB/s', capacity: 'Normal', alerts: 0 },
           ].map((node, i) => (
             <motion.div
               key={i}
@@ -507,10 +504,10 @@ function App() {
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Neural Decision Speed', value: '1.25s',    desc: 'Average LLM inference delay',          color: 'text-purple-400' },
-          { label: 'Breach Avoidance ROI',  value: '+$148,200', desc: 'SLA contract penalty savings',       color: 'text-cyan-400'   },
-          { label: 'Mitigation Rate',       value: '100%',      desc: 'Successful recovery validations',   color: 'text-emerald-400' },
-          { label: 'Conflict Resolutions',  value: `${state?.logs.filter(l => l.action === 'DIAGNOSE').length || 0}`, desc: 'Self-resolved stale metrics', color: 'text-amber-400' },
+          { label: 'Neural Decision Speed', value: '1.25s', desc: 'Average LLM inference delay', color: 'text-purple-400' },
+          { label: 'Breach Avoidance ROI', value: '+$148,200', desc: 'SLA contract penalty savings', color: 'text-cyan-400' },
+          { label: 'Mitigation Rate', value: '100%', desc: 'Successful recovery validations', color: 'text-emerald-400' },
+          { label: 'Conflict Resolutions', value: `${state?.logs.filter(l => l.action === 'DIAGNOSE').length || 0}`, desc: 'Self-resolved stale metrics', color: 'text-amber-400' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="glass-card">
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{stat.label}</span>
@@ -563,12 +560,11 @@ function App() {
             <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.03] transition-all">
               <span className="text-slate-500 font-mono text-xs mt-1 shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
               <div>
-                <span className={`inline-block px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-tighter mr-3 border ${
-                  log.action === 'ROLLBACK' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                  log.action === 'REORDER'  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  log.action === 'REROUTE'  ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                  'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                }`}>
+                <span className={`inline-block px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-tighter mr-3 border ${log.action === 'ROLLBACK' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                    log.action === 'REORDER' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                      log.action === 'REROUTE' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                        'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                  }`}>
                   {log.action}
                 </span>
                 <p className="text-sm text-slate-300 leading-relaxed font-medium mt-1">{log.details}</p>
@@ -593,9 +589,9 @@ function App() {
 
   const tabs = [
     { id: 'dashboard', label: 'Command Center', icon: <LayoutDashboard size={20} /> },
-    { id: 'network',   label: 'Global Network',  icon: <Globe size={20} /> },
+    { id: 'network', label: 'Global Network', icon: <Globe size={20} /> },
     { id: 'analytics', label: 'Impact Analytics', icon: <BarChart3 size={20} /> },
-    { id: 'logs',      label: 'Operation Logs',   icon: <Activity size={20} /> },
+    { id: 'logs', label: 'Operation Logs', icon: <Activity size={20} /> },
   ];
 
   return (
@@ -739,11 +735,12 @@ function App() {
                       <div>
                         <p className="font-bold text-slate-200 text-sm flex items-center gap-2">
                           {user?.username}
-                          <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                            user?.role === 'Director' ? 'bg-[#bc13fe]/20 text-[#bc13fe] border border-[#bc13fe]/30' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                          }`}>{user?.role || 'Operator'}</span>
                         </p>
                         <p className="text-[10px] text-slate-500 truncate max-w-[140px] mt-0.5">{user?.email}</p>
+                        <p>
+                          <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${user?.role === 'Director' ? 'bg-[#bc13fe]/20 text-[#bc13fe] border border-[#bc13fe]/30' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                            }`}>{user?.role || 'Operator'}</span>
+                        </p>
                       </div>
                     </div>
                     <button
@@ -768,10 +765,10 @@ function App() {
                 {tabs.find(t => t.id === activeTab)?.label}
               </h2>
               <p className="text-slate-500 font-medium">
-                {activeTab === 'dashboard'  ? 'Monitoring global disruption signals and autonomous decision flow.' :
-                 activeTab === 'network'    ? 'Real-time diagnostic metrics and throughput states across routing stations.' :
-                 activeTab === 'analytics'  ? 'Decision confidence intervals, ROI summaries, and breach probability logs.' :
-                 'Complete history of log ingestions, mitigations, and execution recovery runs.'}
+                {activeTab === 'dashboard' ? 'Monitoring global disruption signals and autonomous decision flow.' :
+                  activeTab === 'network' ? 'Real-time diagnostic metrics and throughput states across routing stations.' :
+                    activeTab === 'analytics' ? 'Decision confidence intervals, ROI summaries, and breach probability logs.' :
+                      'Complete history of log ingestions, mitigations, and execution recovery runs.'}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -783,10 +780,10 @@ function App() {
             </div>
           </div>
 
-          {activeTab === 'dashboard'  && renderDashboardView()}
-          {activeTab === 'network'    && renderNetworkView()}
-          {activeTab === 'analytics'  && renderAnalyticsView()}
-          {activeTab === 'logs'       && renderLogsView()}
+          {activeTab === 'dashboard' && renderDashboardView()}
+          {activeTab === 'network' && renderNetworkView()}
+          {activeTab === 'analytics' && renderAnalyticsView()}
+          {activeTab === 'logs' && renderLogsView()}
         </div>
       </main>
     </div>
@@ -797,11 +794,10 @@ function App() {
 const NavItem = ({ icon, label, active = false, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group ${
-      active
+    className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group ${active
         ? 'bg-gradient-to-r from-cyan-500/10 to-transparent text-cyan-400 border-l-2 border-cyan-400'
         : 'text-slate-500 hover:bg-white/[0.03] hover:text-slate-300'
-    }`}
+      }`}
   >
     <div className={`${active ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'} transition-colors`}>
       {icon}

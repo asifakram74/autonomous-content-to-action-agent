@@ -36,6 +36,21 @@
         "Medical Supplies"
       ],
       "priority": "Critical"
+    },
+    {
+      "id": "SH-004",
+      "origin": "Dubai, UAE",
+      "destination": "London, UK",
+      "status": "Pending",
+      "current_location": "Dubai, UAE",
+      "eta": "2026-05-31",
+      "items": [
+        {
+          "name": "CPU Processor",
+          "qty": 500
+        }
+      ],
+      "priority": "High"
     }
   ],
   "inventory": [
@@ -53,17 +68,23 @@
     },
     {
       "item": "CPU Processor",
-      "stock": 5000,
-      "reorder_point": 200,
+      "stock": 1000,
+      "reorder_point": 100,
       "status": "Healthy"
     }
   ],
   "logs": [
     {
-      "timestamp": "2026-05-20T16:10:29.934Z",
+      "timestamp": "2026-05-20T17:29:49.429Z",
       "action": "INVENTORY_ADDED",
       "result": "Success",
-      "details": "New inventory item \"CPU Processor\" added with stock 5000."
+      "details": "New inventory item \"CPU Processor\" added with stock 1000."
+    },
+    {
+      "timestamp": "2026-05-20T17:31:18.409Z",
+      "action": "SHIPMENT_ADDED",
+      "result": "Success",
+      "details": "New shipment SH-004 from Dubai, UAE to London, UK added to system."
     }
   ],
   "notifications": [],

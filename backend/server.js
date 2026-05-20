@@ -328,20 +328,39 @@ app.post('/api/shipments', (req, res) => {
         if (db.shipments.find(s => s.id === id)) {
             return res.status(400).json({ error: `Shipment ${id} already exists` });
         }
+
+        // Deduct from inventory based on items and quantities
+        // items expected: [{ name: 'Microchips', qty: 5 }, ...]
+        const shipmentItems = Array.isArray(items) ? items : [];
+        shipmentItems.forEach(si => {
+            const invItem = db.inventory.find(i => i.item.toLowerCase() === si.name.toLowerCase());
+            if (invItem) {
+                invItem.stock = Math.max(0, invItem.stock - (si.qty || 1));
+                invItem.status = invItem.stock <= invItem.reorder_point ? 'Low Stock' : 'Healthy';
+            }
+        });
+
         const shipment = {
             id,
             origin,
             destination,
-            status: status || 'Pending',
+            status: status || 'In Transit',
             current_location: current_location || origin,
-            eta: eta || '',
-            items: Array.isArray(items) ? items : (items ? [items] : []),
+            eta: eta || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            items: shipmentItems,
             priority: priority || 'Medium'
         };
+
         db.shipments.push(shipment);
-        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_ADDED', result: 'Success', details: `New shipment ${id} from ${origin} to ${destination} added to system.` });
+        db.logs.push({ 
+            timestamp: new Date().toISOString(), 
+            action: 'SHIPMENT_ADDED', 
+            result: 'Success', 
+            details: `New shipment ${id} dispatched. Inventory adjusted for: ${shipmentItems.map(si => `${si.name} (x${si.qty})`).join(', ')}.` 
+        });
+
         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-        res.json({ message: 'Shipment added', shipment });
+        res.json({ message: 'Shipment added and inventory adjusted', shipment });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -353,8 +372,34 @@ app.put('/api/shipments/:id', (req, res) => {
         const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
         const idx = db.shipments.findIndex(s => s.id === req.params.id);
         if (idx === -1) return res.status(404).json({ error: 'Shipment not found' });
-        db.shipments[idx] = { ...db.shipments[idx], ...req.body, id: req.params.id };
-        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_UPDATED', result: 'Success', details: `Shipment ${req.params.id} updated manually.` });
+
+        const oldShipment = db.shipments[idx];
+        const newShipmentData = req.body;
+
+        // Rollback old inventory deduction
+        if (oldShipment.items) {
+            oldShipment.items.forEach(si => {
+                const invItem = db.inventory.find(i => i.item.toLowerCase() === si.name.toLowerCase());
+                if (invItem) {
+                    invItem.stock += (si.qty || 1);
+                    invItem.status = invItem.stock <= invItem.reorder_point ? 'Low Stock' : 'Healthy';
+                }
+            });
+        }
+
+        // Apply new inventory deduction
+        if (newShipmentData.items) {
+            newShipmentData.items.forEach(si => {
+                const invItem = db.inventory.find(i => i.item.toLowerCase() === si.name.toLowerCase());
+                if (invItem) {
+                    invItem.stock = Math.max(0, invItem.stock - (si.qty || 1));
+                    invItem.status = invItem.stock <= invItem.reorder_point ? 'Low Stock' : 'Healthy';
+                }
+            });
+        }
+
+        db.shipments[idx] = { ...oldShipment, ...newShipmentData, id: req.params.id };
+        db.logs.push({ timestamp: new Date().toISOString(), action: 'SHIPMENT_UPDATED', result: 'Success', details: `Shipment ${req.params.id} updated. Inventory quantities recalibrated.` });
         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
         res.json({ message: 'Shipment updated', shipment: db.shipments[idx] });
     } catch (e) {
