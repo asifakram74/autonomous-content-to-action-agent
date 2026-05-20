@@ -12,9 +12,18 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
   const [msg, setMsg] = useState({ text: '', type: '' });
 
   // Shipment form
-  const [sf, setSf] = useState({ id: '', origin: '', destination: '', items: '', priority: 'Medium', eta: '' });
+  const [sf, setSf] = useState({ id: '', origin: '', destination: '', items: [], priority: 'Medium', eta: '' });
   // Inventory form
   const [inv, setInv] = useState({ item: '', stock: '', reorder_point: '' });
+
+  const toggleItem = (itemName) => {
+    setSf(prev => ({
+      ...prev,
+      items: prev.items.includes(itemName)
+        ? prev.items.filter(i => i !== itemName)
+        : [...prev.items, itemName]
+    }));
+  };
 
   const flash = (text, type = 'success') => {
     setMsg({ text, type });
@@ -23,14 +32,14 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
 
   const addShipment = async (e) => {
     e.preventDefault();
+    if (sf.items.length === 0) return flash('Please select at least one item', 'error');
     setLoading(true);
     try {
       await axios.post(`${API}/api/shipments`, {
         ...sf,
-        items: sf.items.split(',').map(s => s.trim()).filter(Boolean),
       });
       flash(`Shipment ${sf.id} added successfully`);
-      setSf({ id: '', origin: '', destination: '', items: '', priority: 'Medium', eta: '' });
+      setSf({ id: '', origin: '', destination: '', items: [], priority: 'Medium', eta: '' });
       onRefresh();
     } catch (err) {
       flash(err.response?.data?.error || 'Failed to add shipment', 'error');
@@ -186,11 +195,59 @@ export default function DataManager({ shipments = [], inventory = [], onRefresh 
                           <label className={labelCls}>Destination</label>
                           <input className={inputCls} placeholder="London, UK" value={sf.destination} onChange={e => setSf(p => ({ ...p, destination: e.target.value }))} required />
                         </div>
-                        <div>
-                          <label className={labelCls}>Items (comma-separated)</label>
-                          <input className={inputCls} placeholder="Electronics, Batteries" value={sf.items} onChange={e => setSf(p => ({ ...p, items: e.target.value }))} />
+                        <div className="col-span-2 relative">
+                          <label className={labelCls}>Select Items from Inventory</label>
+                          <div className="relative group">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Toggle a local visibility state if needed, but for now we'll use a simple dropdown
+                                const el = document.getElementById('inv-dropdown');
+                                el.classList.toggle('hidden');
+                              }}
+                              className={`${inputCls} flex items-center justify-between group-hover:border-cyan-500/30`}
+                            >
+                              <span className="truncate">
+                                {sf.items.length === 0 ? 'Choose items...' : `${sf.items.length} item(s) selected`}
+                              </span>
+                              <ChevronRight size={14} className="text-slate-500 transform rotate-90" />
+                            </button>
+                            
+                            <div 
+                              id="inv-dropdown"
+                              className="hidden absolute top-[calc(100%+8px)] left-0 right-0 bg-[#0d0e16] border border-white/10 rounded-2xl shadow-2xl z-50 p-2 max-h-[200px] overflow-y-auto custom-scrollbar"
+                            >
+                              {inventory.length === 0 ? (
+                                <p className="text-[10px] text-slate-600 italic p-4 text-center">No inventory items found.</p>
+                              ) : (
+                                inventory.map(i => (
+                                  <div
+                                    key={i.item}
+                                    onClick={() => toggleItem(i.item)}
+                                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
+                                      sf.items.includes(i.item) 
+                                        ? 'bg-cyan-500/10 text-cyan-400' 
+                                        : 'hover:bg-white/5 text-slate-400'
+                                    }`}
+                                  >
+                                    <span className="text-xs font-bold">{i.item}</span>
+                                    {sf.items.includes(i.item) && <CheckCircle2 size={14} />}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          {sf.items.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {sf.items.map(name => (
+                                <span key={name} className="px-2 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-black uppercase">
+                                  {name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div>
+                        <div className="col-span-2">
                           <label className={labelCls}>ETA</label>
                           <input className={inputCls} type="date" value={sf.eta} onChange={e => setSf(p => ({ ...p, eta: e.target.value }))} />
                         </div>
